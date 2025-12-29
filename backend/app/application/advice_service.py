@@ -36,15 +36,42 @@ class EnergyAdviceService:
         
         advice_data = self._parse_llm_response(llm_response)
         
-        recommendations = [
-            Recommendation(**rec) for rec in advice_data.get("recommendations", [])
-        ]
+        # Process recommendations and calculate missing fields
+        recommendations = []
+        for rec_data in advice_data.get("recommendations", []):
+            # Convert 0 or negative values to None for fields with gt=0 validation
+            for field in ["estimated_savings_annual", "estimated_cost", "payback_period_years"]:
+                if rec_data.get(field) is not None and rec_data.get(field) <= 0:
+                    rec_data[field] = None
+            
+            # Calculate estimated_savings_annual if not provided
+            if rec_data.get("estimated_savings_annual") is None:
+                estimated_cost = rec_data.get("estimated_cost")
+                payback_period = rec_data.get("payback_period_years")
+                
+                if estimated_cost is not None and payback_period is not None and payback_period > 0:
+                    rec_data["estimated_savings_annual"] = estimated_cost / payback_period
+                # Otherwise leave as None (optional field)
+            
+            recommendations.append(Recommendation(**rec_data))
         
+        # Calculate total annual savings if not provided by LLM
+        estimated_total_annual_savings = advice_data.get("estimated_total_annual_savings")
+        if estimated_total_annual_savings is None:
+            # Sum up all individual recommendation savings
+            total_savings = sum(
+                rec.estimated_savings_annual 
+                for rec in recommendations 
+                if rec.estimated_savings_annual is not None
+            )
+            # Use the calculated total if available, otherwise leave as None (optional field)
+            estimated_total_annual_savings = total_savings if total_savings > 0 else None
+
         return EnergyAdvice(
             home_id=home_id,
             recommendations=recommendations,
             summary=advice_data.get("summary", ""),
-            estimated_total_annual_savings=advice_data.get("estimated_total_annual_savings"),
+            estimated_total_annual_savings=estimated_total_annual_savings,
             generated_at=datetime.utcnow(),
             llm_provider=self.llm_provider.get_provider_name()
         )
