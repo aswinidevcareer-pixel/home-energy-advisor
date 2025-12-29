@@ -1,0 +1,45 @@
+# Root gitignore for Home Energy Advisor
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+home_energy_advisor.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+._*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+
+# Python cache (backend)
+__pycache__/
+*.pyc
+
+# Node modules (frontend)
+node_modules/
+
+# Build outputs
+dist/
+build/
