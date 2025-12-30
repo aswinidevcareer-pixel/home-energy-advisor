@@ -9,7 +9,7 @@ from tenacity import (
 )
 import logging
 from app.infrastructure.llm.base import LLMProvider
-from app.infrastructure.llm.exceptions import (
+from app.domain.exceptions import (
     LLMConnectionError,
     LLMTimeoutError,
     LLMServiceUnavailableError

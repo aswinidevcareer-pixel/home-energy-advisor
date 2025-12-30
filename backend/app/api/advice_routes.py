@@ -4,7 +4,8 @@ from app.application.advice_service import EnergyAdviceService
 from app.application.advice_dtos import EnergyAdviceResponse
 from app.api.advice_dependencies import get_advice_service
 from app.application.home_dtos import ErrorResponse
-from app.infrastructure.llm.exceptions import (
+from app.domain.exceptions import (
+    HomeNotFoundError,
     LLMConnectionError,
     LLMTimeoutError,
     LLMServiceUnavailableError,
@@ -75,9 +76,9 @@ async def generate_energy_advice(
             generated_at=advice.generated_at,
             llm_provider=advice.llm_provider
         )
-    except ValueError as e:
+    except HomeNotFoundError as e:
         # Home not found - log and return user-friendly message
-        logger.warning(f"Home not found: {home_id}")
+        logger.warning(f"Home not found: {e.resource_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Home profile not found. Please create a home profile first."
