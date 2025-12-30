@@ -17,6 +17,7 @@ class HomeModel(Base):
     __tablename__ = "homes"
 
     id = Column(String, primary_key=True, index=True)
+    # Basic Information
     size_sqft = Column(Integer, nullable=False)
     age_years = Column(Integer, nullable=False)
     heating_type = Column(String, nullable=False)
@@ -27,8 +28,27 @@ class HomeModel(Base):
     has_basement = Column(Boolean, default=False)
     has_attic = Column(Boolean, default=False)
     has_solar_panels = Column(Boolean, default=False)
-    avg_monthly_energy_cost = Column(Float, nullable=True)
+    has_smart_thermostat = Column(Boolean, default=False)
+    
+    # Advanced - Location & Climate
+    country = Column(String, nullable=True)
     zip_code = Column(String, nullable=True)
+    climate_zone = Column(String, nullable=True)
+    
+    # Advanced - Energy Details
+    primary_energy_source = Column(String, nullable=True)
+    avg_monthly_energy_cost = Column(Float, nullable=True)
+    avg_monthly_kwh = Column(Float, nullable=True)
+    hvac_age_years = Column(Integer, nullable=True)
+    
+    # Advanced - Building Characteristics
+    roof_type = Column(String, nullable=True)
+    roof_age_years = Column(Integer, nullable=True)
+    
+    # Advanced - Preferences
+    budget_range = Column(String, nullable=True)
+    planning_to_sell_years = Column(Integer, nullable=True)
+    
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 

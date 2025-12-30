@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+import logging
 from app.application.advice_service import EnergyAdviceService
 from app.application.advice_dtos import EnergyAdviceResponse
 from app.api.advice_dependencies import get_advice_service
@@ -9,6 +10,9 @@ from app.infrastructure.llm.exceptions import (
     LLMServiceUnavailableError,
     LLMValidationError
 )
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/homes", tags=["energy-advice"])
 
@@ -72,27 +76,37 @@ async def generate_energy_advice(
             llm_provider=advice.llm_provider
         )
     except ValueError as e:
+        # Home not found - log and return user-friendly message
+        logger.warning(f"Home not found: {home_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
+            detail="Home profile not found. Please create a home profile first."
         )
     except LLMTimeoutError as e:
+        # Timeout - log technical details, return user-friendly message
+        logger.error(f"LLM timeout for home {home_id}: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-            detail=str(e)
+            detail="The AI service took too long to respond. Please try again."
         )
     except (LLMConnectionError, LLMServiceUnavailableError) as e:
+        # Connection issues - log technical details
+        logger.error(f"LLM service unavailable for home {home_id}: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(e)
+            detail="The AI service is temporarily unavailable. Please try again in a few moments."
         )
     except LLMValidationError as e:
+        # Validation errors - already logged in service, just return user-friendly message
+        logger.error(f"LLM validation error for home {home_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"LLM response validation failed: {str(e)}"
+            detail="Unable to generate recommendations at this time. Please try again."
         )
     except Exception as e:
+        # Unexpected errors - log full details, return generic message
+        logger.error(f"Unexpected error generating advice for home {home_id}: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate energy advice: {str(e)}"
+            detail="An unexpected error occurred. Our team has been notified. Please try again later."
         )

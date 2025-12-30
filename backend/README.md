@@ -17,6 +17,6 @@ uvicorn app.main:app --reload
 
 3. Access the API:
    - Interactive docs: http://localhost:8000/docs
-   - API: http://localhost:8000/api/homes
+   - API: http://localhost:8000/api/v1/homes
 
 

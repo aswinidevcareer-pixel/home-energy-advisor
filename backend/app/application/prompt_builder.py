@@ -24,26 +24,7 @@ class EnergyAdvicePromptBuilder:
         if not self._home:
             raise ValueError("Home profile must be set before adding details")
         
-        details = f"""
-Home Profile:
-- Size: {self._home.size_sqft} square feet
-- Age: {self._home.age_years} years old
-- Heating Type: {self._home.heating_type}
-- Insulation: {self._home.insulation_type}
-- Windows: {self._home.window_type}
-- Floors: {self._home.num_floors}
-- Occupants: {self._home.num_occupants}
-- Basement: {"Yes" if self._home.has_basement else "No"}
-- Attic: {"Yes" if self._home.has_attic else "No"}
-- Solar Panels: {"Yes" if self._home.has_solar_panels else "No"}"""
-        
-        if self._home.avg_monthly_energy_cost:
-            details += f"\n- Average Monthly Energy Cost: ${self._home.avg_monthly_energy_cost:.2f}"
-        
-        if self._home.zip_code:
-            details += f"\n- Location (Zip Code): {self._home.zip_code}"
-        
-        self._parts.append(details)
+        self._parts.append(str(self._home))
         return self
     
     def add_output_format_instructions(self) -> 'EnergyAdvicePromptBuilder':

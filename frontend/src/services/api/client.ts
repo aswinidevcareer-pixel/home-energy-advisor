@@ -1,24 +1,47 @@
 import axios from 'axios';
 
 export const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: '/api/v1',
   headers: {
     'Content-Type': 'application/json'
   },
   timeout: 120000  // 2 minutes for LLM operations
 });
 
-// Add response interceptor for global error handling
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response) {
-      // Server responded with error status
-      console.error('API Error:', error.response.data);
-    } else if (error.request) {
-      // Request made but no response
-      console.error('Network Error:', error.message);
+// Request interceptor - log outgoing requests (dev only)
+apiClient.interceptors.request.use(
+  (config) => {
+    if (import.meta.env.DEV) {
+      console.log(`📤 API Request: ${config.method?.toUpperCase()} ${config.url}`);
     }
+    return config;
+  },
+  (error) => {
+    console.error('❌ Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor - handle errors centrally
+apiClient.interceptors.response.use(
+  (response) => {
+    if (import.meta.env.DEV) {
+      console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`, response.status);
+    }
+    return response;
+  },
+  (error) => {
+    // Log technical details for developers (only in console)
+    if (import.meta.env.DEV) {
+      console.group('❌ API Error');
+      console.error('URL:', error.config?.url);
+      console.error('Method:', error.config?.method);
+      console.error('Status:', error.response?.status);
+      console.error('Data:', error.response?.data);
+      console.groupEnd();
+    }
+    
+    // Don't modify the error, let the calling code handle it
     return Promise.reject(error);
   }
 );

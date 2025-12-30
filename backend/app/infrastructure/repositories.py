@@ -65,8 +65,22 @@ class SQLAlchemyHomeRepository(HomeRepository):
             has_basement=db_home.has_basement,
             has_attic=db_home.has_attic,
             has_solar_panels=db_home.has_solar_panels,
-            avg_monthly_energy_cost=db_home.avg_monthly_energy_cost,
+            has_smart_thermostat=db_home.has_smart_thermostat,
+            # Advanced - Location & Climate
+            country=db_home.country,
             zip_code=db_home.zip_code,
+            climate_zone=db_home.climate_zone,
+            # Advanced - Energy Details
+            primary_energy_source=db_home.primary_energy_source,
+            avg_monthly_energy_cost=db_home.avg_monthly_energy_cost,
+            avg_monthly_kwh=db_home.avg_monthly_kwh,
+            hvac_age_years=db_home.hvac_age_years,
+            # Advanced - Building Characteristics
+            roof_type=db_home.roof_type,
+            roof_age_years=db_home.roof_age_years,
+            # Advanced - Preferences
+            budget_range=db_home.budget_range,
+            planning_to_sell_years=db_home.planning_to_sell_years,
             created_at=db_home.created_at,
             updated_at=db_home.updated_at
         )

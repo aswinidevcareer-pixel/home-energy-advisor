@@ -1,7 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+import logging
 from app.application.home_service import HomeService
 from app.application.home_dtos import CreateHomeRequest, HomeResponse, ErrorResponse
 from app.api.home_dependencies import get_home_service
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/homes", tags=["homes"])
 
@@ -38,14 +42,16 @@ async def create_home(
     try:
         return await service.create_home(request)
     except ValueError as e:
+        logger.warning(f"Invalid home data: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
+            detail="Invalid home profile data. Please check your inputs and try again."
         )
     except Exception as e:
+        logger.error(f"Unexpected error creating home: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred while creating the home profile"
+            detail="Unable to create home profile. Please try again later."
         )
 
 
@@ -74,10 +80,21 @@ async def get_home(
     home_id: str,
     service: HomeService = Depends(get_home_service)
 ) -> HomeResponse:
-    home = await service.get_home(home_id)
-    if not home:
+    try:
+        home = await service.get_home(home_id)
+        if not home:
+            logger.warning(f"Home not found: {home_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Home profile not found."
+            )
+        return home
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error retrieving home {home_id}: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Home profile with id '{home_id}' not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to retrieve home profile. Please try again later."
         )
-    return home

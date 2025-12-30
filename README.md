@@ -190,3 +190,13 @@ frontend/src/
 "Simplify the styles for the UI - make them minimal, clean, and easy to maintain"
 ```
 
+**Issue 5: Added API Versioning**
+```
+"Implemented proper API versioning (v1) for all endpoints to support future backward-compatible changes"
+```
+
+**Issue 6: Enhanced UX and Error Handling**
+```
+"Implemented progressive disclosure UI pattern with collapsible advanced fields (10+ new home attributes), structured backend logging with technical error details in app.log, and user-friendly error messages with enhanced visual display hiding stack traces from end users"
+```
+

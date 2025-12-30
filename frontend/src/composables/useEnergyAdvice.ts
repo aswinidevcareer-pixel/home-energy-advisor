@@ -1,6 +1,7 @@
 import { ref, type Ref } from 'vue';
 import { homeApi, adviceApi } from '../services/api';
 import type { HomeProfile, EnergyAdvice, Recommendation } from '../types';
+import { handleError, formatErrorForDisplay } from '../utils/errorHandler';
 
 // Priority order (high to low)
 const priorityOrder: Record<string, number> = {
@@ -64,8 +65,9 @@ export function useEnergyAdvice() {
       
       advice.value = adviceResponse;
     } catch (err: any) {
-      error.value = err.response?.data?.detail || err.message || 'An unexpected error occurred';
-      console.error('Error generating advice:', err);
+      // Handle error with user-friendly messages
+      const errorInfo = handleError(err, 'generating energy recommendations');
+      error.value = formatErrorForDisplay(errorInfo);
     } finally {
       loading.value = false;
     }

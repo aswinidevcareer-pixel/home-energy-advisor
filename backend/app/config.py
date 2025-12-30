@@ -4,7 +4,7 @@ from typing import Optional
 
 class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./home_energy_advisor.db"
-    API_V1_PREFIX: str = "/api"
+    API_V1_PREFIX: str = "/api/v1"
     PROJECT_NAME: str = "Home Energy Advisor API"
     VERSION: str = "1.0.0"
     

@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime
 from typing import Optional
 from app.domain.entities import HomeProfile
@@ -7,6 +8,9 @@ from app.domain.repositories import HomeRepository
 from app.infrastructure.llm.base import LLMProvider
 from app.application.prompt_builder import EnergyAdvicePromptBuilder
 from app.infrastructure.llm.exceptions import LLMValidationError
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 
 class EnergyAdviceService:
@@ -23,18 +27,35 @@ class EnergyAdviceService:
         home = await self.home_repository.get_by_id(home_id)
         
         if not home:
+            logger.warning(f"Home not found: {home_id}")
             raise ValueError(f"Home with id '{home_id}' not found")
 
         prompt = self.prompt_builder.build_prompt(home)
         
-        llm_response = await self.llm_provider.generate_completion(
-            prompt=prompt,
-            temperature=0.7,
-            response_format=EnergyAdvice.model_json_schema(),
-            max_tokens=4000
-        )
+        logger.info(f"Generating energy advice for home: {home_id}")
         
-        advice_data = self._parse_llm_response(llm_response)
+        try:
+            llm_response = await self.llm_provider.generate_completion(
+                prompt=prompt,
+                temperature=0.7,
+                response_format=EnergyAdvice.model_json_schema(),
+                max_tokens=4000
+            )
+
+            logger.debug(f"LLM Response received for home {home_id}: {llm_response[:200]}...")
+            
+            advice_data = self._parse_llm_response(llm_response, home_id)
+            
+        except LLMValidationError:
+            # LLM validation errors are already logged and user-friendly, just re-raise
+            raise
+        except json.JSONDecodeError as e:
+            # This should not happen as _parse_llm_response handles it, but keep for safety
+            logger.error(f"JSON parsing error for home {home_id}: {str(e)}", exc_info=True)
+            raise LLMValidationError("Unable to process AI response. Please try again.")
+        except Exception as e:
+            logger.error(f"Unexpected error generating advice for home {home_id}: {str(e)}", exc_info=True)
+            raise
         
         # Process recommendations and calculate missing fields
         recommendations = []
@@ -76,15 +97,22 @@ class EnergyAdviceService:
             llm_provider=self.llm_provider.get_provider_name()
         )
 
-    def _parse_llm_response(self, response: str) -> dict:
+    def _parse_llm_response(self, response: str, home_id: str = None) -> dict:
+        """Parse LLM response with detailed error logging."""
         cleaned_response = response.strip()
         try:
             return json.loads(cleaned_response)
         except json.JSONDecodeError as e:
-            raise LLMValidationError(
-                f"Failed to parse LLM response as JSON: {str(e)}. "
-                f"Response preview: {cleaned_response[:200]}"
-            )
+            error_msg = f"JSON parsing error - Line: {e.lineno}, Column: {e.colno}, Message: {e.msg}"
+            if home_id:
+                logger.error(f"Failed to parse LLM response for home {home_id}: {error_msg}")
+                logger.debug(f"Raw LLM response causing error: {cleaned_response}")
+            else:
+                logger.error(f"Failed to parse LLM response: {error_msg}")
+                logger.debug(f"Raw response: {cleaned_response}")
+            
+            # Re-raise with user-friendly message (technical details already logged)
+            raise LLMValidationError("Unable to process AI response. Please try again.")
 
     async def validate_provider(self) -> bool:
         return await self.llm_provider.health_check()

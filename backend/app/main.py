@@ -2,10 +2,24 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+import logging
+import sys
 from app.config import settings
 from app.infrastructure.database import init_db
 from app.api.home_routes import router as homes_router
 from app.api.advice_routes import router as advice_router
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('app.log')
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -43,18 +57,23 @@ async def validation_exception_handler(request, exc):
         field = " -> ".join(str(loc) for loc in error["loc"])
         errors.append(f"{field}: {error['msg']}")
     
+    # Log validation errors
+    logger.warning(f"Validation error on {request.url.path}: {errors}")
+    
     return JSONResponse(
         status_code=422,
         content={
             "error": "Validation Error",
-            "detail": "; ".join(errors)
+            "detail": "Please check your input and try again."
         }
     )
 
 
 @app.on_event("startup")
 def on_startup():
+    logger.info("Starting Home Energy Advisor API...")
     init_db()
+    logger.info("Database initialized successfully")
 
 
 @app.get("/", tags=["health"])

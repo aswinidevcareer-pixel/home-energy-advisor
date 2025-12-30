@@ -1,4 +1,5 @@
 export interface HomeProfile {
+  // Basic Information
   size_sqft: number;
   age_years: number;
   heating_type: string;
@@ -9,8 +10,26 @@ export interface HomeProfile {
   has_basement: boolean;
   has_attic: boolean;
   has_solar_panels: boolean;
-  avg_monthly_energy_cost?: number;
+  has_smart_thermostat: boolean;
+  
+  // Advanced - Location & Climate
+  country?: string;
   zip_code?: string;
+  climate_zone?: string;
+  
+  // Advanced - Energy Details
+  primary_energy_source?: string;
+  avg_monthly_energy_cost?: number;
+  avg_monthly_kwh?: number;
+  hvac_age_years?: number;
+  
+  // Advanced - Building Characteristics
+  roof_type?: string;
+  roof_age_years?: number;
+  
+  // Advanced - Preferences
+  budget_range?: string;
+  planning_to_sell_years?: number;
 }
 
 export interface HomeResponse extends HomeProfile {

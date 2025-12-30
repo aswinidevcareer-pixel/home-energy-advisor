@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { HomeProfile, HomeResponse, EnergyAdvice } from './types';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: '/api/v1',
   headers: {
     'Content-Type': 'application/json'
   }

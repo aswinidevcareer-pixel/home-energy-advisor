@@ -2,162 +2,36 @@
   <form @submit.prevent="handleSubmit">
     <h2>Tell us about your home</h2>
     
-    <div class="form-grid">
-      <div class="form-group">
-        <label for="size">Home Size (sq ft)*</label>
-        <input
-          id="size"
-          v-model.number="formData.size_sqft"
-          type="number"
-          min="100"
-          max="50000"
-          required
-          placeholder="e.g., 2000"
-        />
-      </div>
+    <!-- Basic Information Section -->
+    <BasicInfoSection v-model="formData" />
 
-      <div class="form-group">
-        <label for="age">Home Age (years)*</label>
-        <input
-          id="age"
-          v-model.number="formData.age_years"
-          type="number"
-          min="0"
-          max="300"
-          required
-          placeholder="e.g., 15"
-        />
-      </div>
+    <!-- Advanced Options Section -->
+    <AdvancedSections
+      v-model="formData"
+      :show-advanced="showAdvanced"
+      @toggle="showAdvanced = !showAdvanced"
+    />
 
-      <div class="form-group">
-        <label for="heating">Heating Type*</label>
-        <select id="heating" v-model="formData.heating_type" required>
-          <option value="">Select...</option>
-          <option value="gas">Gas</option>
-          <option value="electric">Electric</option>
-          <option value="oil">Oil</option>
-          <option value="heat_pump">Heat Pump</option>
-          <option value="solar">Solar</option>
-          <option value="wood">Wood</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="insulation">Insulation Quality*</label>
-        <select id="insulation" v-model="formData.insulation_type" required>
-          <option value="">Select...</option>
-          <option value="none">None</option>
-          <option value="basic">Basic</option>
-          <option value="moderate">Moderate</option>
-          <option value="good">Good</option>
-          <option value="excellent">Excellent</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="windows">Window Type*</label>
-        <select id="windows" v-model="formData.window_type" required>
-          <option value="">Select...</option>
-          <option value="single_pane">Single Pane</option>
-          <option value="double_pane">Double Pane</option>
-          <option value="triple_pane">Triple Pane</option>
-          <option value="low_e">Low-E</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="floors">Number of Floors*</label>
-        <input
-          id="floors"
-          v-model.number="formData.num_floors"
-          type="number"
-          min="1"
-          max="10"
-          required
-          placeholder="e.g., 2"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="occupants">Number of Occupants*</label>
-        <input
-          id="occupants"
-          v-model.number="formData.num_occupants"
-          type="number"
-          min="1"
-          max="20"
-          required
-          placeholder="e.g., 4"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="cost">Avg. Monthly Energy Cost (€)</label>
-        <input
-          id="cost"
-          v-model.number="formData.avg_monthly_energy_cost"
-          type="number"
-          min="0"
-          step="0.01"
-          placeholder="e.g., 250.50"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="zip">Zip Code</label>
-        <input
-          id="zip"
-          v-model="formData.zip_code"
-          type="text"
-          maxlength="10"
-          placeholder="e.g., 94105"
-        />
+    <div v-if="error" class="error-container">
+      <div class="error-icon">⚠️</div>
+      <div class="error-content">
+        <div class="error-title">Unable to Generate Recommendations</div>
+        <div class="error-message">{{ error }}</div>
+        <div class="error-hint">Please try again or contact support if the problem persists.</div>
       </div>
     </div>
 
-    <div class="form-grid">
-      <div class="checkbox-group">
-        <input
-          id="basement"
-          v-model="formData.has_basement"
-          type="checkbox"
-        />
-        <label for="basement">Has Basement</label>
-      </div>
-
-      <div class="checkbox-group">
-        <input
-          id="attic"
-          v-model="formData.has_attic"
-          type="checkbox"
-        />
-        <label for="attic">Has Attic</label>
-      </div>
-
-      <div class="checkbox-group">
-        <input
-          id="solar"
-          v-model="formData.has_solar_panels"
-          type="checkbox"
-        />
-        <label for="solar">Has Solar Panels</label>
-      </div>
-    </div>
-
-    <div v-if="error" class="error">
-      {{ error }}
-    </div>
-
-    <button type="submit" :disabled="loading">
+    <button type="submit" :disabled="loading" class="submit-btn">
       {{ loading ? 'Generating Recommendations...' : 'Get Energy Recommendations' }}
     </button>
   </form>
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue';
-import type { HomeProfile } from '../types';
+import { reactive, ref } from 'vue';
+import BasicInfoSection from './BasicInfoSection.vue';
+import AdvancedSections from './AdvancedSections.vue';
+import type { HomeProfile } from '../../types';
 
 interface Props {
   loading: boolean;
@@ -171,7 +45,10 @@ interface Emits {
 defineProps<Props>();
 const emit = defineEmits<Emits>();
 
+const showAdvanced = ref(false);
+
 const formData = reactive<HomeProfile>({
+  // Basic Information
   size_sqft: 2000,
   age_years: 15,
   heating_type: '',
@@ -182,8 +59,26 @@ const formData = reactive<HomeProfile>({
   has_basement: false,
   has_attic: false,
   has_solar_panels: false,
+  has_smart_thermostat: false,
+  
+  // Advanced - Location & Climate
+  country: undefined,
+  zip_code: undefined,
+  climate_zone: undefined,
+  
+  // Advanced - Energy Details
+  primary_energy_source: undefined,
   avg_monthly_energy_cost: undefined,
-  zip_code: ''
+  avg_monthly_kwh: undefined,
+  hvac_age_years: undefined,
+  
+  // Advanced - Building Characteristics
+  roof_type: undefined,
+  roof_age_years: undefined,
+  
+  // Advanced - Preferences
+  budget_range: undefined,
+  planning_to_sell_years: undefined,
 });
 
 const handleSubmit = () => {
@@ -192,90 +87,92 @@ const handleSubmit = () => {
 </script>
 
 <style scoped>
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
+h2 {
+  color: #2c3e50;
+  margin-bottom: 2rem;
+  font-size: 1.8rem;
+}
+
+/* Enhanced Error Display */
+.error-container {
+  background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%);
+  border: 2px solid #ef5350;
+  border-radius: 12px;
+  padding: 1.5rem;
   margin-bottom: 1.5rem;
-}
-
-.form-group {
   display: flex;
-  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+  box-shadow: 0 2px 8px rgba(239, 83, 80, 0.1);
 }
 
-.form-group label {
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #555;
+.error-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite;
 }
 
-.form-group input,
-.form-group select {
-  padding: 0.75rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  background: white;
-  color: #333;
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
-.form-group input:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: #7986cb;
-  box-shadow: 0 0 0 3px rgba(121, 134, 203, 0.15);
+.error-content {
+  flex: 1;
 }
 
-.checkbox-group {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.checkbox-group input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-}
-
-.checkbox-group label {
-  cursor: pointer;
-  user-select: none;
-  color: #555;
-  font-weight: 500;
-}
-
-.error {
-  background: #ffebee;
+.error-title {
+  font-weight: 700;
+  font-size: 1.1rem;
   color: #c62828;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  border-left: 4px solid #ef5350;
+  margin-bottom: 0.5rem;
 }
 
-button {
+.error-message {
+  color: #d32f2f;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
+.error-hint {
+  color: #e57373;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.submit-btn {
   width: 100%;
   padding: 1rem 2rem;
   background: linear-gradient(135deg, #5c6bc0 0%, #3f51b5 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(63, 81, 181, 0.3);
 }
 
-button:hover:not(:disabled) {
+.submit-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(63, 81, 181, 0.3);
+  box-shadow: 0 6px 20px rgba(63, 81, 181, 0.4);
 }
 
-button:disabled {
+.submit-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  h2 {
+    font-size: 1.5rem;
+  }
 }
 </style>
