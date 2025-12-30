@@ -27,13 +27,13 @@ class CreateHomeRequest(BaseModel):
     has_smart_thermostat: bool = Field(default=False, description="Whether the home has a smart thermostat")
     
     # Advanced - Location & Climate
-    country: Optional[str] = Field(default=None, max_length=100, description="Country", examples=["United States"])
-    zip_code: Optional[str] = Field(default=None, max_length=10, description="Zip code for climate considerations", examples=["94105"])
+    country: Optional[str] = Field(default=None, max_length=100, description="Country", examples=["Germany"])
+    zip_code: Optional[str] = Field(default=None, max_length=10, description="Zip code for climate considerations", examples=["10115"])
     climate_zone: Optional[ClimateZone] = Field(default=None, description="Climate zone classification", examples=["cold"])
     
     # Advanced - Energy Details
     primary_energy_source: Optional[EnergySource] = Field(default=None, description="Primary energy source", examples=["natural_gas"])
-    avg_monthly_energy_cost: Optional[float] = Field(default=None, ge=0, description="Average monthly energy cost in USD", examples=[250.50])
+    avg_monthly_energy_cost: Optional[float] = Field(default=None, ge=0, description="Average monthly energy cost in EUR", examples=[250.50])
     avg_monthly_kwh: Optional[float] = Field(default=None, ge=0, description="Average monthly electricity consumption in kWh", examples=[900.0])
     hvac_age_years: Optional[int] = Field(default=None, ge=0, le=50, description="Age of HVAC system", examples=[8])
     
@@ -59,8 +59,8 @@ class CreateHomeRequest(BaseModel):
                 "has_attic": True,
                 "has_solar_panels": False,
                 "has_smart_thermostat": False,
-                "country": "United States",
-                "zip_code": "94105",
+                "country": "Germany",
+                "zip_code": "10115",
                 "climate_zone": "cold",
                 "primary_energy_source": "natural_gas",
                 "avg_monthly_energy_cost": 250.50,
@@ -127,8 +127,8 @@ class HomeResponse(BaseModel):
                 "has_attic": True,
                 "has_solar_panels": False,
                 "has_smart_thermostat": False,
-                "country": "United States",
-                "zip_code": "94105",
+                "country": "Germany",
+                "zip_code": "10115",
                 "climate_zone": "cold",
                 "primary_energy_source": "natural_gas",
                 "avg_monthly_energy_cost": 250.50,

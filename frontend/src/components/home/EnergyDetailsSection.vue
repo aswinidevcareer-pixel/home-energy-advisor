@@ -15,7 +15,7 @@
         id="cost"
         :model-value="modelValue.avg_monthly_energy_cost"
         @update:model-value="updateField('avg_monthly_energy_cost', $event)"
-        label="Avg. Monthly Energy Cost ($)"
+        label="Avg. Monthly Energy Cost (€)"
         type="number"
         :min="0"
         step="0.01"

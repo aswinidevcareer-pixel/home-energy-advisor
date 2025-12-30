@@ -45,10 +45,10 @@ const updateField = (field: keyof HomeProfile, value: any) => {
 
 const budgetOptions = [
   { value: '', label: 'Select...' },
-  { value: 'low', label: 'Low (<$5,000)' },
-  { value: 'medium', label: 'Medium ($5,000-$15,000)' },
-  { value: 'high', label: 'High ($15,000-$50,000)' },
-  { value: 'premium', label: 'Premium (>$50,000)' }
+  { value: 'low', label: 'Low (<€5,000)' },
+  { value: 'medium', label: 'Medium (€5,000-€15,000)' },
+  { value: 'high', label: 'High (€15,000-€50,000)' },
+  { value: 'premium', label: 'Premium (>€50,000)' }
 ];
 </script>
 

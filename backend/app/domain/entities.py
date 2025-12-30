@@ -58,10 +58,10 @@ class RoofType(str, Enum):
 
 
 class BudgetRange(str, Enum):
-    LOW = "low"           # Under $2,000
-    MEDIUM = "medium"     # $2,000 - $10,000
-    HIGH = "high"         # $10,000 - $30,000
-    PREMIUM = "premium"   # Over $30,000
+    LOW = "low"           # Under €5,000
+    MEDIUM = "medium"     # €5,000 - €15,000
+    HIGH = "high"         # €15,000 - €50,000
+    PREMIUM = "premium"   # Over €50,000
 
 
 class HomeProfile(BaseModel):
@@ -86,7 +86,7 @@ class HomeProfile(BaseModel):
     
     # Advanced - Energy Details
     primary_energy_source: Optional[EnergySource] = Field(default=None, description="Primary energy source")
-    avg_monthly_energy_cost: Optional[float] = Field(default=None, ge=0, description="Average monthly energy cost in USD")
+    avg_monthly_energy_cost: Optional[float] = Field(default=None, ge=0, description="Average monthly energy cost in EUR")
     avg_monthly_kwh: Optional[float] = Field(default=None, ge=0, description="Average monthly electricity consumption in kWh")
     hvac_age_years: Optional[int] = Field(default=None, ge=0, le=50, description="Age of HVAC system")
     
@@ -135,7 +135,7 @@ class HomeProfile(BaseModel):
         if self.primary_energy_source:
             details += f"\n- Primary Energy Source: {self.primary_energy_source}"
         if self.avg_monthly_energy_cost:
-            details += f"\n- Average Monthly Energy Cost: ${self.avg_monthly_energy_cost:.2f}"
+            details += f"\n- Average Monthly Energy Cost: €{self.avg_monthly_energy_cost:.2f}"
         if self.avg_monthly_kwh:
             details += f"\n- Average Monthly Electricity Usage: {self.avg_monthly_kwh:.1f} kWh"
         if self.hvac_age_years is not None:

@@ -9,7 +9,7 @@
         label="Country"
         type="text"
         :maxlength="100"
-        placeholder="e.g., United States"
+        placeholder="e.g., Germany"
       />
 
       <FormField

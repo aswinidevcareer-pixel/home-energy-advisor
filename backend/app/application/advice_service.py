@@ -125,6 +125,3 @@ class EnergyAdviceService:
             
             # Re-raise with user-friendly message (technical details already logged)
             raise LLMValidationError("Unable to process AI response. Please try again.")
-
-    async def validate_provider(self) -> bool:
-        return await self.llm_provider.health_check()
