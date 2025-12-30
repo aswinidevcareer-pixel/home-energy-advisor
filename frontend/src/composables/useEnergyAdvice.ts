@@ -2,21 +2,7 @@ import { ref, type Ref } from 'vue';
 import { homeApi, adviceApi } from '../services/api';
 import type { HomeProfile, EnergyAdvice, Recommendation } from '../types';
 import { handleError, formatErrorForDisplay } from '../utils/errorHandler';
-
-// Priority order (high to low)
-const priorityOrder: Record<string, number> = {
-  'critical': 1,
-  'high': 2,
-  'medium': 3,
-  'low': 4
-};
-
-// Difficulty order (easy to difficult)
-const difficultyOrder: Record<string, number> = {
-  'easy': 1,
-  'moderate': 2,
-  'difficult': 3
-};
+import { PRIORITY_ORDER, DIFFICULTY_ORDER, DEFAULT_DIFFICULTY } from '../constants';
 
 /**
  * Sort recommendations by priority, difficulty, and cost
@@ -24,13 +10,13 @@ const difficultyOrder: Record<string, number> = {
 function sortRecommendations(recommendations: Recommendation[]): Recommendation[] {
   return [...recommendations].sort((a, b) => {
     // 1. Sort by priority (high to low)
-    const priorityDiff = priorityOrder[a.priority.toLowerCase()] - priorityOrder[b.priority.toLowerCase()];
+    const priorityDiff = PRIORITY_ORDER[a.priority.toLowerCase()] - PRIORITY_ORDER[b.priority.toLowerCase()];
     if (priorityDiff !== 0) return priorityDiff;
 
     // 2. Sort by difficulty (easy to difficult)
-    const diffA = a.implementation_difficulty?.toLowerCase() || 'moderate';
-    const diffB = b.implementation_difficulty?.toLowerCase() || 'moderate';
-    const difficultyDiff = (difficultyOrder[diffA] || 2) - (difficultyOrder[diffB] || 2);
+    const diffA = a.implementation_difficulty?.toLowerCase() || DEFAULT_DIFFICULTY;
+    const diffB = b.implementation_difficulty?.toLowerCase() || DEFAULT_DIFFICULTY;
+    const difficultyDiff = (DIFFICULTY_ORDER[diffA] || 2) - (DIFFICULTY_ORDER[diffB] || 2);
     if (difficultyDiff !== 0) return difficultyDiff;
 
     // 3. Sort by cost (low to high)

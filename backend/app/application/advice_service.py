@@ -8,9 +8,18 @@ from app.domain.repositories import HomeRepository
 from app.domain.exceptions import HomeNotFoundError, LLMValidationError
 from app.infrastructure.llm.base import LLMProvider
 from app.application.prompt_builder import EnergyAdvicePromptBuilder
+from app.constants import (
+    LLM_TEMPERATURE,
+    LLM_MAX_TOKENS,
+    LOG_RESPONSE_PREVIEW_LENGTH,
+    ZERO_VALUE_THRESHOLD
+)
 
 # Configure logger
 logger = logging.getLogger(__name__)
+
+# Field names for recommendation processing
+FINANCIAL_FIELDS = ["estimated_savings_annual", "estimated_cost", "payback_period_years"]
 
 
 class EnergyAdviceService:
@@ -37,12 +46,12 @@ class EnergyAdviceService:
         try:
             llm_response = await self.llm_provider.generate_completion(
                 prompt=prompt,
-                temperature=0.7,
+                temperature=LLM_TEMPERATURE,
                 response_format=EnergyAdvice.model_json_schema(),
-                max_tokens=4000
+                max_tokens=LLM_MAX_TOKENS
             )
 
-            logger.debug(f"LLM Response received for home {home_id}: {llm_response[:200]}...")
+            logger.debug(f"LLM Response received for home {home_id}: {llm_response[:LOG_RESPONSE_PREVIEW_LENGTH]}...")
             
             advice_data = self._parse_llm_response(llm_response, home_id)
 
@@ -74,21 +83,30 @@ class EnergyAdviceService:
         
         for rec_data in recommendations_data:
             # Convert 0 or negative values to None for fields with gt=0 validation
-            for field in ["estimated_savings_annual", "estimated_cost", "payback_period_years"]:
-                if rec_data.get(field) is not None and rec_data.get(field) <= 0:
+            for field in FINANCIAL_FIELDS:
+                if rec_data.get(field) is not None and rec_data.get(field) <= ZERO_VALUE_THRESHOLD:
                     rec_data[field] = None
             
             # Calculate estimated_savings_annual if not provided
             if rec_data.get("estimated_savings_annual") is None:
-                estimated_cost = rec_data.get("estimated_cost")
-                payback_period = rec_data.get("payback_period_years")
-                
-                if estimated_cost is not None and payback_period is not None and payback_period > 0:
-                    rec_data["estimated_savings_annual"] = estimated_cost / payback_period
+                rec_data["estimated_savings_annual"] = self._calculate_annual_savings(
+                    rec_data.get("estimated_cost"),
+                    rec_data.get("payback_period_years")
+                )
             
             recommendations.append(Recommendation(**rec_data))
         
         return recommendations
+
+    def _calculate_annual_savings(
+        self, 
+        estimated_cost: Optional[float], 
+        payback_period: Optional[float]
+    ) -> Optional[float]:
+        """Calculate annual savings from cost and payback period."""
+        if estimated_cost is not None and payback_period is not None and payback_period > ZERO_VALUE_THRESHOLD:
+            return estimated_cost / payback_period
+        return None
 
     def _calculate_total_savings(
         self, 
@@ -96,7 +114,7 @@ class EnergyAdviceService:
         recommendations: list[Recommendation]
     ) -> Optional[float]:
         """Calculate total annual savings from recommendations if not provided by LLM."""
-        if llm_provided_total is not None:
+        if llm_provided_total is not None and llm_provided_total > ZERO_VALUE_THRESHOLD:
             return llm_provided_total
         
         # Sum up all individual recommendation savings
@@ -106,8 +124,7 @@ class EnergyAdviceService:
             if rec.estimated_savings_annual is not None
         )
         
-        # Return calculated total if available, otherwise None
-        return total_savings if total_savings > 0 else None
+        return total_savings if total_savings > ZERO_VALUE_THRESHOLD else None
 
     def _parse_llm_response(self, response: str, home_id: str = None) -> dict:
         """Parse LLM response with detailed error logging."""

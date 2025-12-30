@@ -1,9 +1,11 @@
+import { CURRENCY_LOCALE, DATE_LOCALE } from '../constants';
+
 /**
  * Format currency value to EUR
  */
 export function formatCurrency(value: number | undefined): string {
   if (value === undefined || value === null) return '€0';
-  return `€${value.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  return `€${value.toLocaleString(CURRENCY_LOCALE, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
 /**
@@ -11,7 +13,7 @@ export function formatCurrency(value: number | undefined): string {
  */
 export function formatDate(date: string | Date): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('de-DE', {
+  return d.toLocaleDateString(DATE_LOCALE, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

@@ -14,6 +14,12 @@ from app.domain.exceptions import (
     LLMTimeoutError,
     LLMServiceUnavailableError
 )
+from app.constants import (
+    LLM_TIMEOUT_SECONDS,
+    LLM_RETRY_ATTEMPTS,
+    LLM_RETRY_MIN_WAIT,
+    LLM_RETRY_MAX_WAIT
+)
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +29,7 @@ class OllamaProvider(LLMProvider):
         self,
         base_url: str = "http://localhost:11434",
         model: str = "llama3.2",
-        timeout: int = 120
+        timeout: int = LLM_TIMEOUT_SECONDS
     ):
         self.base_url = base_url.rstrip('/')
         self.model = model
@@ -31,8 +37,8 @@ class OllamaProvider(LLMProvider):
 
     @retry(
         retry=retry_if_exception_type((httpx.TimeoutException, httpx.NetworkError)),
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=1, max=10),
+        stop=stop_after_attempt(LLM_RETRY_ATTEMPTS),
+        wait=wait_exponential(multiplier=1, min=LLM_RETRY_MIN_WAIT, max=LLM_RETRY_MAX_WAIT),
         before_sleep=before_sleep_log(logger, logging.WARNING),
         reraise=True
     )
