@@ -23,6 +23,9 @@ ollama serve
 # Pull a model (in a new terminal)
 ollama pull llama3.2
 
+# Run llama3.2 locally
+ollama run llama3.2
+
 ```
 
 #### 1.2 Clone and Setup application
@@ -200,3 +203,14 @@ frontend/src/
 "Implemented progressive disclosure UI pattern with collapsible advanced fields (10+ new home attributes), structured backend logging with technical error details in app.log, and user-friendly error messages with enhanced visual display hiding stack traces from end users"
 ```
 
+---
+
+## 🔧 Future Improvements (If Given More Time)
+
+### 1. **Universal OpenAI-Compatible LLM Library**
+Create a reusable provider class supporting any LLM provider (OpenAI, Anthropic, Ollama, etc.):
+- **Unified interface** - Single provider class for all providers using OpenAI's chat completion format
+- **Built-in retry logic** - Exponential backoff, circuit breaker pattern, automatic failover
+- **Error handling** - Standardized error types, provider-specific error mapping
+- **Observability** - Request/response logging, token tracking, latency metrics, cost estimation
+---

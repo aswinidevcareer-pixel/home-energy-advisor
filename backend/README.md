@@ -4,13 +4,29 @@ RESTful API for the Home Energy Advisor application, built with FastAPI followin
 
 ## Setup
 
-1. Install dependencies:
+1. Ollama Installation
+```bash
+# macOS
+brew install ollama
+
+# Start Ollama service
+ollama serve
+
+# Pull a model (in a new terminal)
+ollama pull llama3.2
+
+# run llama3.2 locally
+ollama run llama3.2
+
+```
+
+2. Install dependencies:
 ```bash
 cd backend
 pip install -r requirements.txt
 ```
 
-2. Run the application:
+3. Run the application:
 ```bash
 uvicorn app.main:app --reload
 ```
