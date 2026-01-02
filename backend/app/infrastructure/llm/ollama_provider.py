@@ -1,5 +1,5 @@
 import httpx
-from typing import Optional, Any
+from typing import Optional, Any, List
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -9,6 +9,7 @@ from tenacity import (
 )
 import logging
 from app.infrastructure.llm.base import LLMProvider
+from app.infrastructure.llm.types import ChatMessage
 from app.domain.exceptions import (
     LLMConnectionError,
     LLMTimeoutError,
@@ -35,6 +36,34 @@ class OllamaProvider(LLMProvider):
         self.model = model
         self.timeout = timeout
 
+    def _merge_messages(self, messages: List[ChatMessage]) -> str:
+        """
+        Merge chat messages into a single prompt for Ollama.
+        
+        Ollama's /api/generate endpoint expects a single prompt string,
+        so we merge system and user messages together.
+        
+        Args:
+            messages: List of ChatMessage objects with role and content
+            
+        Returns:
+            Merged prompt string
+        """
+        prompt_parts = []
+        
+        for message in messages:
+            if message.role == "system":
+                # Prefix system messages to give context
+                prompt_parts.append(f"System: {message.content}")
+            elif message.role == "user":
+                # User messages are the main prompt
+                prompt_parts.append(message.content)
+            elif message.role == "assistant":
+                # Include assistant messages if present (for conversation history)
+                prompt_parts.append(f"Assistant: {message.content}")
+        
+        return "\n\n".join(prompt_parts)
+
     @retry(
         retry=retry_if_exception_type((httpx.TimeoutException, httpx.NetworkError)),
         stop=stop_after_attempt(LLM_RETRY_ATTEMPTS),
@@ -44,16 +73,32 @@ class OllamaProvider(LLMProvider):
     )
     async def generate_completion(
         self,
-        prompt: str,
+        messages: List[ChatMessage],
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
-        response_format: Optional[Any] = None
+        response_format: Optional[Any] = None,
+        max_tokens: Optional[int] = None
     ) -> str:
+        """
+        Generate completion from chat messages.
+        
+        Args:
+            messages: List of ChatMessage objects with role and content
+                     Example: [ChatMessage(role="system", content="..."), ChatMessage(role="user", content="...")]
+            temperature: Sampling temperature
+            response_format: Optional JSON schema for structured output
+            max_tokens: Maximum tokens to generate
+            
+        Returns:
+            Generated completion string
+        """
         url = f"{self.base_url}/api/generate"
+        
+        # Merge messages into a single prompt for Ollama
+        merged_prompt = self._merge_messages(messages)
         
         payload = {
             "model": self.model,
-            "prompt": prompt,
+            "prompt": merged_prompt,
             "stream": False,
             "options": {
                 "temperature": temperature,

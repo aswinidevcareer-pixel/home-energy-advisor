@@ -1,16 +1,30 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Any
+from typing import Optional, Any, List
+from app.infrastructure.llm.types import ChatMessage
 
 
 class LLMProvider(ABC):
     @abstractmethod
     async def generate_completion(
         self,
-        prompt: str,
+        messages: List[ChatMessage],
         temperature: float = 0.7,
         response_format: Optional[Any] = None,
         max_tokens: Optional[int] = None
     ) -> str:
+        """
+        Generate completion from a list of chat messages.
+        
+        Args:
+            messages: List of ChatMessage objects with role and content
+                     Example: [ChatMessage(role="system", content="..."), ChatMessage(role="user", content="...")]
+            temperature: Sampling temperature
+            response_format: Optional response format specification
+            max_tokens: Maximum tokens to generate
+            
+        Returns:
+            Generated completion string
+        """
         pass
 
     @abstractmethod

@@ -1,4 +1,5 @@
 from app.domain.entities import HomeProfile
+from app.infrastructure.llm.types import ChatMessage
 from typing import Optional, List
 
 
@@ -6,7 +7,8 @@ class EnergyAdvicePromptBuilder:
     """Builder pattern for constructing energy advice prompts with fluent interface."""
     
     def __init__(self):
-        self._parts: List[str] = []
+        self._system_message: Optional[str] = None
+        self._user_parts: List[str] = []
         self._home: Optional[HomeProfile] = None
         
     def with_home_profile(self, home: HomeProfile) -> 'EnergyAdvicePromptBuilder':
@@ -16,7 +18,7 @@ class EnergyAdvicePromptBuilder:
     
     def add_system_context(self) -> 'EnergyAdvicePromptBuilder':
         """Add the expert system context."""
-        self._parts.append(self.build_system_message())
+        self._system_message = self.build_system_message()
         return self
     
     def add_home_details(self) -> 'EnergyAdvicePromptBuilder':
@@ -24,7 +26,7 @@ class EnergyAdvicePromptBuilder:
         if not self._home:
             raise ValueError("Home profile must be set before adding details")
         
-        self._parts.append(str(self._home))
+        self._user_parts.append(str(self._home))
         return self
     
     def add_output_format_instructions(self) -> 'EnergyAdvicePromptBuilder':
@@ -48,39 +50,61 @@ IMPORTANT GUIDELINES:
 - Provide Details for all the properties of the response model mentioned in the format
 - Do mathmetical calculation and fill in the property values(estimated_savings_annual for each recommendation, estimated_total_annual_savings for EnergyAdvice) based on the logic provided in the schema description."""
         
-        self._parts.append(instructions)
+        self._user_parts.append(instructions)
         return self
     
     def add_custom_section(self, section: str) -> 'EnergyAdvicePromptBuilder':
-        """Add a custom section to the prompt."""
-        self._parts.append(section)
+        """Add a custom section to the user prompt."""
+        self._user_parts.append(section)
         return self
     
-    def build(self) -> str:
-        """Build and return the final prompt."""
+    def build_messages(self) -> List[ChatMessage]:
+        """Build and return messages in chat format."""
         if not self._home:
-            raise ValueError("Home profile must be set before building prompt")
+            raise ValueError("Home profile must be set before building messages")
         
-        if not self._parts:
-            raise ValueError("Prompt must have at least one section")
+        if not self._user_parts:
+            raise ValueError("User message must have at least one section")
         
-        return "\n".join(self._parts)
+        messages = []
+        
+        # Add system message if present
+        if self._system_message:
+            messages.append(ChatMessage(
+                role="system",
+                content=self._system_message
+            ))
+        
+        # Add user message
+        messages.append(ChatMessage(
+            role="user",
+            content="\n".join(self._user_parts)
+        ))
+        
+        return messages
+    
+    def build(self) -> str:
+        """Build and return the final prompt (backwards compatible)."""
+        messages = self.build_messages()
+        # Merge system and user messages for backwards compatibility
+        return "\n".join(msg.content for msg in messages)
     
     def reset(self) -> 'EnergyAdvicePromptBuilder':
         """Reset the builder for reuse."""
-        self._parts = []
+        self._system_message = None
+        self._user_parts = []
         self._home = None
         return self
     
     @staticmethod
-    def build_prompt(home: HomeProfile) -> str:
-        """Convenience method for building a standard prompt (backwards compatible)."""
+    def build_prompt(home: HomeProfile) -> List[ChatMessage]:
+        """Convenience method for building messages in chat format."""
         return (EnergyAdvicePromptBuilder()
                 .with_home_profile(home)
                 .add_system_context()
                 .add_home_details()
                 .add_output_format_instructions()
-                .build())
+                .build_messages())
     
     @staticmethod
     def build_system_message() -> str:

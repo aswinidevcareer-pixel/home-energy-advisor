@@ -39,13 +39,14 @@ class EnergyAdviceService:
             logger.warning(f"Home not found: {home_id}")
             raise HomeNotFoundError(home_id)
 
-        prompt = self.prompt_builder.build_prompt(home)
+        # Build messages in chat format: [{"role": "system", "content": "..."}, {"role": "user", "content": "..."}]
+        messages = self.prompt_builder.build_prompt(home)
         
         logger.info(f"Generating energy advice for home: {home_id}")
         
         try:
             llm_response = await self.llm_provider.generate_completion(
-                prompt=prompt,
+                messages=messages,
                 temperature=LLM_TEMPERATURE,
                 response_format=EnergyAdvice.model_json_schema(),
                 max_tokens=LLM_MAX_TOKENS
@@ -72,7 +73,7 @@ class EnergyAdviceService:
             home_id=home_id,
             recommendations=recommendations,
             summary=advice_data.get("summary", ""),
-            estimated_total_annual_savings=estimated_total_annual_savings,
+            estimated_total_annual_savings=estimated_total_annual_savings if estimated_total_annual_savings else 0,
             generated_at=datetime.utcnow(),
             llm_provider=self.llm_provider.get_provider_name()
         )
