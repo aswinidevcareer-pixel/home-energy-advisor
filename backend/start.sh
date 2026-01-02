@@ -5,11 +5,11 @@
 echo "🏠 Starting Home Energy Advisor Backend..."
 
 # Check if virtual environment exists
-if [ ! -d "venv" ]; then
+if [ ! -d ".venv" ]; then
     echo "📦 Creating virtual environment..."
-    python3 -m venv venv
+    python3 -m venv .venv
     echo "🔌 Activating virtual environment..."
-    source venv/bin/activate
+    source .venv/bin/activate
     echo "📥 Installing dependencies (downloading packages, please wait 2-3 minutes)..."
     echo "    You'll see download progress below..."
     echo ""
@@ -22,9 +22,9 @@ if [ ! -d "venv" ]; then
     echo "✅ Dependencies installed successfully!"
 else
     echo "🔌 Activating virtual environment..."
-    source venv/bin/activate
+    source .venv/bin/activate
     echo "✅ Virtual environment already exists (skipping dependency installation)"
-    echo "   To reinstall dependencies, run: rm -rf venv && ./start.sh"
+    echo "   To reinstall dependencies, run: rm -rf .venv && ./start.sh"
 fi
 
 # Disable pip version warnings for the session

@@ -43,6 +43,18 @@ fi
 echo ""
 echo "🚀 Starting Backend API..."
 cd backend
+
+# Check if virtual environment exists, create if not
+if [ ! -d ".venv" ]; then
+    echo "📦 Creating virtual environment..."
+    python3 -m venv .venv
+    source .venv/bin/activate
+    echo "📥 Installing backend dependencies..."
+    pip install -r requirements.txt
+else
+    source .venv/bin/activate
+fi
+
 chmod +x start.sh
 ./start.sh &
 BACKEND_PID=$!
