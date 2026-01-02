@@ -1,6 +1,14 @@
 """Type definitions for LLM infrastructure."""
 from typing import Literal
 from pydantic import BaseModel, Field
+from enum import Enum
+
+
+class MessageRole(str, Enum):
+    """Enum for chat message roles."""
+    SYSTEM = "system"
+    USER = "user"
+    ASSISTANT = "assistant"
 
 
 class ChatMessage(BaseModel):

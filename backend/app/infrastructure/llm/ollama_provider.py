@@ -9,7 +9,7 @@ from tenacity import (
 )
 import logging
 from app.infrastructure.llm.base import LLMProvider
-from app.infrastructure.llm.types import ChatMessage
+from app.infrastructure.llm.types import ChatMessage, MessageRole
 from app.domain.exceptions import (
     LLMConnectionError,
     LLMTimeoutError,
@@ -52,13 +52,13 @@ class OllamaProvider(LLMProvider):
         prompt_parts = []
         
         for message in messages:
-            if message.role == "system":
+            if message.role == MessageRole.SYSTEM.value:
                 # Prefix system messages to give context
                 prompt_parts.append(f"System: {message.content}")
-            elif message.role == "user":
+            elif message.role == MessageRole.USER.value:
                 # User messages are the main prompt
                 prompt_parts.append(message.content)
-            elif message.role == "assistant":
+            elif message.role == MessageRole.ASSISTANT.value:
                 # Include assistant messages if present (for conversation history)
                 prompt_parts.append(f"Assistant: {message.content}")
         
