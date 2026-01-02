@@ -9,7 +9,7 @@ from tenacity import (
 )
 import logging
 from app.infrastructure.llm.base import LLMProvider
-from app.infrastructure.llm.types import ChatMessage, MessageRole
+from app.infrastructure.llm.types import ChatMessage
 from app.domain.exceptions import (
     LLMConnectionError,
     LLMTimeoutError,
@@ -35,34 +35,6 @@ class OllamaProvider(LLMProvider):
         self.base_url = base_url.rstrip('/')
         self.model = model
         self.timeout = timeout
-
-    def _merge_messages(self, messages: List[ChatMessage]) -> str:
-        """
-        Merge chat messages into a single prompt for Ollama.
-        
-        Ollama's /api/generate endpoint expects a single prompt string,
-        so we merge system and user messages together.
-        
-        Args:
-            messages: List of ChatMessage objects with role and content
-            
-        Returns:
-            Merged prompt string
-        """
-        prompt_parts = []
-        
-        for message in messages:
-            if message.role == MessageRole.SYSTEM.value:
-                # Prefix system messages to give context
-                prompt_parts.append(f"System: {message.content}")
-            elif message.role == MessageRole.USER.value:
-                # User messages are the main prompt
-                prompt_parts.append(message.content)
-            elif message.role == MessageRole.ASSISTANT.value:
-                # Include assistant messages if present (for conversation history)
-                prompt_parts.append(f"Assistant: {message.content}")
-        
-        return "\n\n".join(prompt_parts)
 
     @retry(
         retry=retry_if_exception_type((httpx.TimeoutException, httpx.NetworkError)),
@@ -91,14 +63,18 @@ class OllamaProvider(LLMProvider):
         Returns:
             Generated completion string
         """
-        url = f"{self.base_url}/api/generate"
+        # Ollama supports /api/chat endpoint which natively accepts messages array
+        url = f"{self.base_url}/api/chat"
         
-        # Merge messages into a single prompt for Ollama
-        merged_prompt = self._merge_messages(messages)
+        # Convert ChatMessage objects to dict format for Ollama
+        messages_dict = [
+            {"role": msg.role, "content": msg.content}
+            for msg in messages
+        ]
         
         payload = {
             "model": self.model,
-            "prompt": merged_prompt,
+            "messages": messages_dict,
             "stream": False,
             "options": {
                 "temperature": temperature,
@@ -117,7 +93,8 @@ class OllamaProvider(LLMProvider):
                 response = await client.post(url, json=payload)
                 response.raise_for_status()
                 result = response.json()
-                return result.get("response", "")
+                # /api/chat returns message in result["message"]["content"]
+                return result.get("message", {}).get("content", "")
             except httpx.TimeoutException:
                 # Will be retried by tenacity, but if all retries fail, raise custom error
                 raise LLMTimeoutError(
