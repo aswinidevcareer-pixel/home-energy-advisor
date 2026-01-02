@@ -51,7 +51,6 @@ class EnergyAdviceService:
                 response_format=EnergyAdvice.model_json_schema(),
                 max_tokens=LLM_MAX_TOKENS
             )
-
             logger.debug(f"LLM Response received for home {home_id}: {llm_response[:LOG_RESPONSE_PREVIEW_LENGTH]}...")
             
             advice_data = self._parse_llm_response(llm_response, home_id)
@@ -127,7 +126,7 @@ class EnergyAdviceService:
         
         return total_savings if total_savings > ZERO_VALUE_THRESHOLD else None
 
-    def _parse_llm_response(self, response: str, home_id: str = None) -> dict:
+    def _parse_llm_response(self, response: str, home_id: str) -> dict:
         """Parse LLM response with detailed error logging."""
         cleaned_response = response.strip()
         try:

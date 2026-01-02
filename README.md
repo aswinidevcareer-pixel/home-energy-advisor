@@ -33,8 +33,13 @@ ollama run llama3.2
 ```bash
 cd home-energy-advisor
 
-# Install backend dependencies
+# Create and activate virtual environment:
 cd backend
+python3 -m venv .venv
+source .venv/bin/activate  # On macOS/Linux
+# .venv\Scripts\activate  # On Windows
+
+# Install backend dependencies
 pip install -r requirements.txt
 cd ..
 

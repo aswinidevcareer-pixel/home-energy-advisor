@@ -47,8 +47,9 @@ IMPORTANT GUIDELINES:
 - Ensure all recommendations are actionable and practical
 - Return ONLY valid JSON, no markdown formatting, no code blocks
 - All numeric values should be numbers, not strings
-- Provide Details for all the properties of the response model mentioned in the format
-- Do mathmetical calculation and fill in the property values(estimated_savings_annual for each recommendation, estimated_total_annual_savings for EnergyAdvice) based on the logic provided in the schema description."""
+- Provide details for all properties of the response model
+- For financial properties (costs, savings, payback period): Always provide valid positive values greater than 0 (e.g., use 1.0 instead of 0.0 or null) when the schema requires gt > 0
+- Perform mathematical calculations and fill in property values (estimated_savings_annual for each recommendation, estimated_total_annual_savings for EnergyAdvice) based on the logic provided in the schema descriptions"""
         
         self._user_parts.append(instructions)
         return self

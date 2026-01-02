@@ -9,7 +9,7 @@ class LLMProvider(ABC):
         self,
         messages: List[ChatMessage],
         temperature: float = 0.7,
-        response_format: Optional[Any] = None,
+        response_format: Optional[dict[str, Any]] = None,
         max_tokens: Optional[int] = None
     ) -> str:
         """
